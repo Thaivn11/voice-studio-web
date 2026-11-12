@@ -1,0 +1,9 @@
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+numpy>=1.26.0
+soundfile>=0.12.1
+torch>=2.4.0
+torchaudio>=2.4.0
+pytest>=8.0.0
+httpx>=0.27.0

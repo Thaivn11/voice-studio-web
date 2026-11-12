@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Voice Studio</title>
+  <style>
+    :root { color-scheme: light; --bg: #f5f7fb; --card: #fff; --muted: #657085; --line: #dfe5f1; --primary: #2f5be7; --primary-dark: #1d42b5; --text: #1a2433; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); font-family: Inter, Segoe UI, sans-serif; color: var(--text); }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 18px 40px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 18px; }
+    .brand h1 { margin: 0; font-size: clamp(1.5rem, 2vw, 2.3rem); }
+    .brand p { margin: 4px 0 0; color: var(--muted); }
+    .device-box { display: flex; align-items: center; gap: 10px; }
+    .device-box select, .device-box button, .panel input, .panel textarea, .panel select, .panel button { font: inherit; }
+    select, input, textarea { width: 100%; border: 1px solid var(--line); border-radius: 10px; background: white; padding: 10px 12px; color: var(--text); }
+    textarea { min-height: 110px; resize: vertical; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.7fr); gap: 18px; }
+    .panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 12px 30px rgba(17, 24, 39, 0.04); padding: 20px; }
+    .field { margin-bottom: 16px; }
+    label { display: block; font-weight: 600; margin-bottom: 8px; }
+    .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .primary { background: var(--primary); color: white; border: 0; border-radius: 10px; padding: 11px 16px; cursor: pointer; font-weight: 700; }
+    .secondary { background: #edf2ff; color: var(--primary-dark); border: 0; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 600; }
+    .status { margin-top: 14px; padding: 12px 14px; background: #f3f6ff; border: 1px solid #dfe8ff; border-radius: 10px; color: var(--text); min-height: 46px; }
+    .muted { color: var(--muted); font-size: 0.92rem; }
+    .hidden { display: none !important; }
+    .history-item { border-top: 1px solid var(--line); padding: 12px 0; }
+    .history-item:first-child { border-top: 0; padding-top: 0; }
+    .small-actions { display: flex; gap: 8px; margin-top: 8px; }
+    .play-btn, .delete-btn { border: 1px solid var(--line); border-radius: 8px; background: white; padding: 8px 10px; cursor: pointer; }
+    audio { width: 100%; margin-top: 12px; }
+    .download-link { display: inline-block; margin-top: 10px; }
+    .consent-row { display: flex; align-items: flex-start; gap: 10px; }
+    .consent-row input { width: auto; margin-top: 3px; }
+    @media (max-width: 880px) { .layout { grid-template-columns: 1fr; } .topbar { flex-direction: column; align-items: flex-start; } .row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="topbar">
+      <div class="brand">
+        <h1>Voice Studio</h1>
+        <p>Private internal voice cloning and synthesis</p>
+      </div>
+      <div class="device-box">
+        <select id="device">
+          <option value="auto">Auto</option>
+          <option value="cuda">CUDA</option>
+          <option value="cpu">CPU</option>
+          <option value="mps">Apple Metal</option>
+        </select>
+        <button id="load-model" class="secondary">Load model</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <section class="panel">
+        <div class="field">
+          <label for="mode">Mode</label>
+          <select id="mode">
+            <option value="clone">Voice clone</option>
+            <option value="design">Voice design</option>
+            <option value="auto">Auto voice</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="text">Text to synthesize</label>
+          <textarea id="text" placeholder="Type the text to generate..."></textarea>
+        </div>
+
+        <div id="clone-fields">
+          <div class="field">
+            <label for="ref_audio">Reference audio</label>
+            <input id="ref_audio" type="file" accept="audio/*" />
+          </div>
+          <div class="field">
+            <label for="ref_text">Reference transcript</label>
+            <input id="ref_text" placeholder="Optional" />
+          </div>
+          <div class="field consent-row">
+            <input id="consent" type="checkbox" />
+            <label for="consent" style="margin:0; font-weight:500;">I have permission to use this voice sample.</label>
+          </div>
+        </div>
+
+        <div id="design-fields" class="hidden">
+          <div class="field">
+            <label for="instruct">Voice design instruction</label>
+            <input id="instruct" placeholder="e.g. warm female voice, soft tone, moderate pace" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="language">Language</label>
+            <input id="language" placeholder="Optional" />
+          </div>
+          <div class="field">
+            <label for="speed">Speed</label>
+            <input id="speed" type="number" min="0.5" max="1.5" step="0.05" value="1" />
+          </div>
+          <div class="field">
+            <label for="steps">Steps</label>
+            <input id="steps" type="number" min="4" max="64" step="1" value="32" />
+          </div>
+        </div>
+
+        <button id="generate" class="primary" style="width:100%;">Generate speech</button>
+        <div id="status" class="status">Ready to load model.</div>
+      </section>
+
+      <aside class="panel">
+        <h2>Output</h2>
+        <p id="output-info" class="muted">No generated audio yet.</p>
+        <audio id="player" controls></audio>
+        <a id="download-link" class="primary download-link hidden" href="#" download>Download WAV</a>
+        <h3>Recent generations</h3>
+        <div id="history" class="muted">No recent outputs.</div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const historyEl = document.getElementById('history');
+    const modeEl = document.getElementById('mode');
+    const cloneFields = document.getElementById('clone-fields');
+    const designFields = document.getElementById('design-fields');
+    const player = document.getElementById('player');
+    const downloadLink = document.getElementById('download-link');
+
+    function setStatus(message) {
+      statusEl.textContent = message;
+    }
+
+    function updateModeVisibility() {
+      const mode = modeEl.value;
+      cloneFields.classList.toggle('hidden', mode !== 'clone');
+      designFields.classList.toggle('hidden', mode !== 'design');
+    }
+
+    modeEl.addEventListener('change', updateModeVisibility);
+
+    async function request(url, options = {}) {
+      const response = await fetch(url, options);
+      let data = {};
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+      if (!response.ok) {
+        throw new Error(data.detail || `Request failed (${response.status})`);
+      }
+      return data;
+    }
+
+    document.getElementById('load-model').addEventListener('click', async () => {
+      const device = document.getElementById('device').value;
+      setStatus('Loading model...');
+      try {
+        const result = await request(`/api/load-model?device=${encodeURIComponent(device)}`, { method: 'POST' });
+        setStatus(`${result.message} Device: ${result.device || 'unknown'}`);
+      } catch (error) {
+        setStatus(`Load failed: ${error.message}`);
+      }
+    });
+
+    document.getElementById('generate').addEventListener('click', async () => {
+      const form = new FormData();
+      form.append('text', document.getElementById('text').value);
+      form.append('mode', modeEl.value);
+      form.append('language', document.getElementById('language').value);
+      form.append('speed', document.getElementById('speed').value);
+      form.append('num_step', document.getElementById('steps').value);
+      form.append('ref_text', document.getElementById('ref_text').value);
+      form.append('instruct', document.getElementById('instruct').value);
+      form.append('consent', document.getElementById('consent').checked ? 'true' : 'false');
+      const refAudio = document.getElementById('ref_audio').files[0];
+      if (refAudio) form.append('ref_audio', refAudio);
+
+      try {
+        setStatus('Generating audio...');
+        const result = await request('/api/generate', { method: 'POST', body: form });
+        player.src = result.audio_url;
+        player.load();
+        document.getElementById('output-info').textContent = `${result.filename} · ${result.duration_seconds.toFixed(1)} sec`;
+        downloadLink.href = result.audio_url;
+        downloadLink.classList.remove('hidden');
+        setStatus('Audio generated successfully.');
+        await refreshHistory();
+      } catch (error) {
+        setStatus(`Generation failed: ${error.message}`);
+      }
+    });
+
+    async function refreshHistory() {
+      try {
+        const items = await request('/api/history');
+        historyEl.innerHTML = '';
+        if (!items.length) {
+          historyEl.textContent = 'No recent outputs.';
+          return;
+        }
+
+        for (const item of items) {
+          const row = document.createElement('div');
+          row.className = 'history-item';
+          row.innerHTML = `
+            <strong>${item.filename}</strong>
+            <div class="muted">${item.timestamp || ''} · ${item.mode || 'auto'}</div>
+            <div class="muted">${(item.text || '').slice(0, 120)}</div>
+            <div class="small-actions">
+              <button class="play-btn" type="button">Play</button>
+              <button class="delete-btn" type="button">Delete</button>
+            </div>
+          `;
+          row.querySelector('.play-btn').addEventListener('click', () => {
+            player.src = item.audio_url;
+            player.play();
+            document.getElementById('output-info').textContent = item.filename;
+            downloadLink.href = item.audio_url;
+            downloadLink.classList.remove('hidden');
+          });
+          row.querySelector('.delete-btn').addEventListener('click', async () => {
+            try {
+              await request(`/api/history/${item.id}`, { method: 'DELETE' });
+              await refreshHistory();
+            } catch (error) {
+              setStatus(`Delete failed: ${error.message}`);
+            }
+          });
+          historyEl.appendChild(row);
+        }
+      } catch (error) {
+        historyEl.textContent = 'History unavailable.';
+      }
+    }
+
+    updateModeVisibility();
+    refreshHistory();
+  </script>
+</body>
+</html>
