@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import CONFIG, HISTORY_FILE, OUTPUT_DIR, UPLOADS_DIR
 from app.history_manager import HistoryManager
+from app.queue import GenerationQueue
 
 logger = logging.getLogger(__name__)
 STATIC_DIR = Path(__file__).parent / "static"
@@ -25,6 +26,7 @@ if not (STATIC_DIR / "index.html").is_file():
 app = FastAPI(title=CONFIG.app_name, docs_url=None, redoc_url=None)
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 history = HistoryManager(HISTORY_FILE)
+queue = GenerationQueue()
 
 _engine: Any | None = None
 _engine_device: str | None = None
@@ -55,7 +57,6 @@ def _safe_audio_path(filename: str) -> Path:
 
 
 def _generate(engine: Any, kwargs: dict[str, Any], filename: str) -> tuple[Path, Any]:
-    # OmniVoice inference is serialized because a single model instance is shared.
     with _inference_lock:
         audio = engine.generate(**kwargs)
         output_path = engine.save_audio(audio, OUTPUT_DIR / filename)
@@ -75,6 +76,23 @@ def health() -> dict[str, str]:
 @app.get("/api/status")
 def get_status() -> dict[str, Any]:
     return dict(_status)
+
+
+@app.get("/api/overview")
+def get_overview() -> dict[str, Any]:
+    return {
+        "model_loaded": _engine is not None,
+        "state": _status.get("state"),
+        "device": _engine_device,
+        "history_count": len(history.list_recent()),
+        "queue_length": len(queue.list()),
+        "message": _status.get("message"),
+    }
+
+
+@app.get("/api/jobs")
+def jobs() -> list[dict[str, Any]]:
+    return queue.list()
 
 
 @app.post("/api/load-model")
@@ -134,6 +152,8 @@ async def generate(
     if mode == "design" and not instruct.strip():
         raise HTTPException(status_code=400, detail="Voice design instruction is required.")
 
+    job = queue.enqueue(mode=mode, text=text)
+    queue.update_status(job.id, "queued")
     saved_reference: Path | None = None
     try:
         if ref_audio is not None:
@@ -148,6 +168,7 @@ async def generate(
             saved_reference = UPLOADS_DIR / f"{uuid4().hex}{suffix}"
             saved_reference.write_bytes(payload)
 
+        queue.update_status(job.id, "running")
         kwargs: dict[str, Any] = {
             "text": text,
             "speed": speed,
@@ -171,6 +192,7 @@ async def generate(
             instruct=instruct.strip() or None,
             language=language.strip() or None,
         )
+        queue.update_status(job.id, "completed")
         _status.update(state="ready", device=_engine_device, message="Audio generated.")
         return {
             "id": entry["id"],
@@ -180,8 +202,10 @@ async def generate(
             "sample_rate": engine.sampling_rate,
         }
     except HTTPException:
+        queue.update_status(job.id, "failed")
         raise
     except Exception as exc:
+        queue.update_status(job.id, "failed")
         logger.exception("Speech generation failed")
         _status.update(state="ready", device=_engine_device, message=f"Generation failed: {exc}")
         raise HTTPException(status_code=500, detail=_status["message"]) from exc
