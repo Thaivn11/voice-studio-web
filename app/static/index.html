@@ -5,39 +5,40 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Voice Studio</title>
   <style>
-    :root { --bg: #f5f7fb; --card: #fff; --muted: #657085; --line: #dfe5f1; --primary: #2f5be7; --primary-dark: #1d42b5; --text: #1a2433; --good: #18794e; --warn: #a76a00; --danger: #a11f1f; }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); font-family: Inter, Segoe UI, sans-serif; color: var(--text); }
-    .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 18px 40px; }
-    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 18px; }
-    .brand h1 { margin: 0; font-size: clamp(1.5rem, 2vw, 2.3rem); }
-    .brand p { margin: 4px 0 0; color: var(--muted); }
-    .device-box { display: flex; align-items: center; gap: 10px; }
-    select, input, textarea, button { font: inherit; }
-    select, input, textarea { width: 100%; border: 1px solid var(--line); border-radius: 10px; background: white; padding: 10px 12px; color: var(--text); }
-    textarea { min-height: 110px; resize: vertical; }
-    .layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.7fr); gap: 18px; }
-    .panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 12px 30px rgba(17,24,39,.04); padding: 20px; }
-    .field { margin-bottom: 16px; }
-    label { display: block; font-weight: 600; margin-bottom: 8px; }
-    .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-    .primary { background: var(--primary); color: white; border: 0; border-radius: 10px; padding: 11px 16px; cursor: pointer; font-weight: 700; }
-    .secondary { background: #edf2ff; color: var(--primary-dark); border: 0; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 600; }
-    .status { margin-top: 14px; padding: 12px 14px; background: #f3f6ff; border: 1px solid #dfe8ff; border-radius: 10px; color: var(--text); min-height: 46px; }
-    .muted { color: var(--muted); font-size: 0.92rem; }
-    .hidden { display: none !important; }
-    .stats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-bottom: 18px; }
-    .stat { background: #f7f9fe; border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
-    .stat strong { display: block; font-size: 1.5rem; }
-    .history-item { border-top: 1px solid var(--line); padding: 12px 0; }
-    .history-item:first-child { border-top: 0; padding-top: 0; }
-    .small-actions { display: flex; gap: 8px; margin-top: 8px; }
-    .play-btn, .delete-btn { border: 1px solid var(--line); border-radius: 8px; background: white; padding: 8px 10px; cursor: pointer; }
-    audio { width: 100%; margin-top: 12px; }
-    .download-link { display: inline-block; margin-top: 12px; }
-    .consent-row { display: flex; align-items: flex-start; gap: 10px; }
-    .consent-row input { width: auto; margin-top: 3px; }
-    @media (max-width: 880px) { .layout { grid-template-columns: 1fr; } .topbar { flex-direction: column; align-items: flex-start; } .row, .stats { grid-template-columns: 1fr; } }
+    :root { --bg:#f5f7fb; --card:#fff; --muted:#657085; --line:#dfe5f1; --primary:#2f5be7; --primary-dark:#1d42b5; --text:#1a2433; --danger:#a11f1f; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); font-family:Inter,Segoe UI,sans-serif; color:var(--text); }
+    .wrap { max-width:1200px; margin:0 auto; padding:28px 18px 40px; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:18px; }
+    .brand h1 { margin:0; font-size:clamp(1.5rem,2vw,2.3rem); }
+    .brand p { margin:4px 0 0; color:var(--muted); }
+    .device-box { display:flex; align-items:center; gap:10px; }
+    select, input, textarea, button { font:inherit; }
+    select, input, textarea { width:100%; border:1px solid var(--line); border-radius:10px; background:white; padding:10px 12px; color:var(--text); }
+    textarea { min-height:110px; resize:vertical; }
+    .layout { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(260px,0.7fr); gap:18px; }
+    .panel { background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:0 12px 30px rgba(17,24,39,.04); padding:20px; }
+    .field { margin-bottom:16px; }
+    label { display:block; font-weight:600; margin-bottom:8px; }
+    .row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .primary { background:var(--primary); color:white; border:0; border-radius:10px; padding:11px 16px; cursor:pointer; font-weight:700; }
+    .secondary { background:#edf2ff; color:var(--primary-dark); border:0; border-radius:10px; padding:10px 14px; cursor:pointer; font-weight:600; }
+    .status { margin-top:14px; padding:12px 14px; background:#f3f6ff; border:1px solid #dfe8ff; border-radius:10px; color:var(--text); min-height:46px; }
+    .muted { color:var(--muted); font-size:0.92rem; }
+    .hidden { display:none !important; }
+    .stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+    .stat { background:#f7f9fe; border:1px solid var(--line); border-radius:12px; padding:12px; }
+    .stat strong { display:block; font-size:1.5rem; }
+    .auth-card { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin-bottom:18px; }
+    .history-item { border-top:1px solid var(--line); padding:12px 0; }
+    .history-item:first-child { border-top:0; padding-top:0; }
+    .small-actions { display:flex; gap:8px; margin-top:8px; }
+    .play-btn, .delete-btn { border:1px solid var(--line); border-radius:8px; background:white; padding:8px 10px; cursor:pointer; }
+    audio { width:100%; margin-top:12px; }
+    .download-link { display:inline-block; margin-top:12px; }
+    .consent-row { display:flex; align-items:flex-start; gap:10px; }
+    .consent-row input { width:auto; margin-top:3px; }
+    @media (max-width: 880px) { .layout, .auth-card, .row, .stats { grid-template-columns:1fr; } .topbar { flex-direction:column; align-items:flex-start; } }
   </style>
 </head>
 <body>
@@ -58,88 +59,107 @@
       </div>
     </header>
 
-    <div class="stats">
-      <div class="stat"><span class="muted">Model</span><strong id="model-state">Offline</strong></div>
-      <div class="stat"><span class="muted">Device</span><strong id="device-state">—</strong></div>
-      <div class="stat"><span class="muted">Queue</span><strong id="queue-state">0</strong></div>
+    <div id="auth-box" class="auth-card panel">
+      <div>
+        <h3>Sign in</h3>
+        <div class="field"><label for="login-user">Username</label><input id="login-user" placeholder="admin" /></div>
+        <div class="field"><label for="login-pass">Password</label><input id="login-pass" type="password" placeholder="••••••••" /></div>
+        <button id="login-btn" class="primary" style="width:100%;">Sign in</button>
+      </div>
+      <div>
+        <h3>Project workspace</h3>
+        <div class="field"><label for="project-name">Project name</label><input id="project-name" placeholder="My internal demo" /></div>
+        <div class="field"><label for="project-desc">Description</label><input id="project-desc" placeholder="Voice campaign or client demo" /></div>
+        <button id="create-project" class="secondary" style="width:100%;">Create project</button>
+      </div>
     </div>
 
-    <div class="layout">
-      <section class="panel">
-        <div class="field">
-          <label for="mode">Mode</label>
-          <select id="mode">
-            <option value="clone">Voice clone</option>
-            <option value="design">Voice design</option>
-            <option value="auto">Auto voice</option>
-          </select>
-        </div>
+    <div id="app-shell" class="hidden">
+      <div class="stats">
+        <div class="stat"><span class="muted">Model</span><strong id="model-state">Offline</strong></div>
+        <div class="stat"><span class="muted">Device</span><strong id="device-state">—</strong></div>
+        <div class="stat"><span class="muted">Queue</span><strong id="queue-state">0</strong></div>
+      </div>
 
-        <div class="field">
-          <label for="text">Text to synthesize</label>
-          <textarea id="text" placeholder="Type the text to generate..."></textarea>
-        </div>
-
-        <div id="clone-fields">
+      <div class="layout">
+        <section class="panel">
           <div class="field">
-            <label for="ref_audio">Reference audio</label>
-            <input id="ref_audio" type="file" accept="audio/*" />
+            <label for="mode">Mode</label>
+            <select id="mode">
+              <option value="clone">Voice clone</option>
+              <option value="design">Voice design</option>
+              <option value="auto">Auto voice</option>
+            </select>
           </div>
+
           <div class="field">
-            <label for="ref_text">Reference transcript</label>
-            <input id="ref_text" placeholder="Optional" />
+            <label for="text">Text to synthesize</label>
+            <textarea id="text" placeholder="Type the text to generate..."></textarea>
           </div>
-          <div class="field consent-row">
-            <input id="consent" type="checkbox" />
-            <label for="consent" style="margin:0; font-weight:500;">I have permission to use this voice sample.</label>
+
+          <div id="clone-fields">
+            <div class="field">
+              <label for="ref_audio">Reference audio</label>
+              <input id="ref_audio" type="file" accept="audio/*" />
+            </div>
+            <div class="field">
+              <label for="ref_text">Reference transcript</label>
+              <input id="ref_text" placeholder="Optional" />
+            </div>
+            <div class="field consent-row">
+              <input id="consent" type="checkbox" />
+              <label for="consent" style="margin:0; font-weight:500;">I have permission to use this voice sample.</label>
+            </div>
           </div>
-        </div>
 
-        <div id="design-fields" class="hidden">
-          <div class="field">
-            <label for="instruct">Voice design instruction</label>
-            <input id="instruct" placeholder="e.g. warm female voice, soft tone, moderate pace" />
+          <div id="design-fields" class="hidden">
+            <div class="field">
+              <label for="instruct">Voice design instruction</label>
+              <input id="instruct" placeholder="e.g. warm female voice, soft tone, moderate pace" />
+            </div>
           </div>
-        </div>
 
-        <div class="row">
-          <div class="field">
-            <label for="language">Language</label>
-            <input id="language" placeholder="Optional" />
+          <div class="row">
+            <div class="field">
+              <label for="language">Language</label>
+              <input id="language" placeholder="Optional" />
+            </div>
+            <div class="field">
+              <label for="speed">Speed</label>
+              <input id="speed" type="number" min="0.5" max="1.5" step="0.05" value="1" />
+            </div>
+            <div class="field">
+              <label for="steps">Steps</label>
+              <input id="steps" type="number" min="4" max="64" step="1" value="32" />
+            </div>
           </div>
-          <div class="field">
-            <label for="speed">Speed</label>
-            <input id="speed" type="number" min="0.5" max="1.5" step="0.05" value="1" />
-          </div>
-          <div class="field">
-            <label for="steps">Steps</label>
-            <input id="steps" type="number" min="4" max="64" step="1" value="32" />
-          </div>
-        </div>
 
-        <button id="generate" class="primary" style="width:100%;">Generate speech</button>
-        <div id="status" class="status">Ready to load model.</div>
-      </section>
+          <button id="generate" class="primary" style="width:100%;">Generate speech</button>
+          <div id="status" class="status">Ready to load model.</div>
+        </section>
 
-      <aside class="panel">
-        <h2>Output</h2>
-        <p id="output-info" class="muted">No generated audio yet.</p>
-        <audio id="player" controls></audio>
-        <a id="download-link" class="primary download-link hidden" href="#" download>Download WAV</a>
-
-        <h3>Recent generations</h3>
-        <div id="history" class="muted">No recent outputs.</div>
-
-        <h3>Generation jobs</h3>
-        <div id="jobs" class="muted">No jobs queued.</div>
-      </aside>
+        <aside class="panel">
+          <h2>Output</h2>
+          <p id="output-info" class="muted">No generated audio yet.</p>
+          <audio id="player" controls></audio>
+          <a id="download-link" class="primary download-link hidden" href="#" download>Download WAV</a>
+          <h3>Recent generations</h3>
+          <div id="history" class="muted">No recent outputs.</div>
+          <h3>Generation jobs</h3>
+          <div id="jobs" class="muted">No jobs queued.</div>
+          <h3>Projects</h3>
+          <div id="projects" class="muted">No projects yet.</div>
+        </aside>
+      </div>
     </div>
   </main>
 
   <script>
+    const tokenKey = 'voice-studio-token';
     const statusEl = document.getElementById('status');
     const historyEl = document.getElementById('history');
     const jobsEl = document.getElementById('jobs');
+    const projectsEl = document.getElementById('projects');
     const modeEl = document.getElementById('mode');
     const cloneFields = document.getElementById('clone-fields');
     const designFields = document.getElementById('design-fields');
@@ -148,10 +168,13 @@
     const modelStateEl = document.getElementById('model-state');
     const deviceStateEl = document.getElementById('device-state');
     const queueStateEl = document.getElementById('queue-state');
+    const authBox = document.getElementById('auth-box');
+    const appShell = document.getElementById('app-shell');
 
-    function setStatus(message) {
-      statusEl.textContent = message;
-    }
+    function setStatus(message) { statusEl.textContent = message; }
+    function getToken() { return localStorage.getItem(tokenKey); }
+    function setToken(token) { if (token) localStorage.setItem(tokenKey, token); else localStorage.removeItem(tokenKey); }
+    function authHeaders() { return { Authorization: `Bearer ${getToken()}` }; }
 
     function updateModeVisibility() {
       const mode = modeEl.value;
@@ -159,8 +182,10 @@
       designFields.classList.toggle('hidden', mode !== 'design');
     }
 
-    async function request(url, options = {}) {
-      const response = await fetch(url, options);
+    async function request(url, options = {}, signed = true) {
+      const headers = new Headers(options.headers || {});
+      if (signed && getToken()) headers.set('Authorization', `Bearer ${getToken()}`);
+      const response = await fetch(url, { ...options, headers });
       let data = {};
       try { data = await response.json(); } catch { data = {}; }
       if (!response.ok) throw new Error(data.detail || `Request failed (${response.status})`);
@@ -173,8 +198,27 @@
         modelStateEl.textContent = overview.model_loaded ? 'Ready' : 'Offline';
         deviceStateEl.textContent = overview.device || '—';
         queueStateEl.textContent = String(overview.queue_length || 0);
-      } catch (error) {
+      } catch {
         modelStateEl.textContent = 'Error';
+      }
+    }
+
+    async function refreshProjects() {
+      try {
+        const projects = await request('/api/projects');
+        projectsEl.innerHTML = '';
+        if (!projects.length) {
+          projectsEl.textContent = 'No projects yet.';
+          return;
+        }
+        for (const project of projects) {
+          const row = document.createElement('div');
+          row.className = 'history-item';
+          row.innerHTML = `<strong>${project.name}</strong><div class='muted'>${project.description || 'No description'}</div><div class='muted'>Owner: ${project.owner}</div>`;
+          projectsEl.appendChild(row);
+        }
+      } catch (error) {
+        projectsEl.textContent = 'Projects unavailable.';
       }
     }
 
@@ -189,17 +233,58 @@
         for (const job of jobs) {
           const item = document.createElement('div');
           item.className = 'history-item';
-          item.innerHTML = `
-            <strong>${job.mode}</strong>
-            <div class="muted">status: ${job.status}</div>
-            <div class="muted">${(job.text || '').slice(0, 90)}</div>
-          `;
+          item.innerHTML = `<strong>${job.mode}</strong><div class='muted'>status: ${job.status}</div><div class='muted'>${(job.text || '').slice(0, 90)}</div>`;
           jobsEl.appendChild(item);
         }
-      } catch (error) {
+      } catch {
         jobsEl.textContent = 'Jobs unavailable.';
       }
     }
+
+    function updateAuthState() {
+      const signedIn = !!getToken();
+      authBox.classList.toggle('hidden', signedIn);
+      appShell.classList.toggle('hidden', !signedIn);
+    }
+
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      const username = document.getElementById('login-user').value.trim();
+      const password = document.getElementById('login-pass').value;
+      const form = new FormData();
+      form.append('username', username);
+      form.append('password', password);
+      try {
+        const result = await fetch('/api/auth/login', { method: 'POST', body: form });
+        const data = await result.json();
+        if (!result.ok) throw new Error(data.detail || 'Login failed');
+        setToken(data.token);
+        updateAuthState();
+        await refreshHistory();
+        await refreshJobs();
+        await refreshProjects();
+        await loadOverview();
+      } catch (error) {
+        setStatus(`Login failed: ${error.message}`);
+      }
+    });
+
+    document.getElementById('create-project').addEventListener('click', async () => {
+      const name = document.getElementById('project-name').value.trim();
+      const description = document.getElementById('project-desc').value.trim();
+      if (!name) { setStatus('Project name is required.'); return; }
+      const form = new FormData();
+      form.append('name', name);
+      form.append('description', description);
+      try {
+        await request('/api/projects', { method: 'POST', body: form });
+        document.getElementById('project-name').value = '';
+        document.getElementById('project-desc').value = '';
+        await refreshProjects();
+        setStatus('Project created.');
+      } catch (error) {
+        setStatus(`Project creation failed: ${error.message}`);
+      }
+    });
 
     document.getElementById('load-model').addEventListener('click', async () => {
       const device = document.getElementById('device').value;
@@ -251,17 +336,16 @@
           historyEl.textContent = 'No recent outputs.';
           return;
         }
-
         for (const item of items) {
           const row = document.createElement('div');
           row.className = 'history-item';
           row.innerHTML = `
             <strong>${item.filename}</strong>
-            <div class="muted">${item.timestamp || ''} · ${item.mode || 'auto'}</div>
-            <div class="muted">${(item.text || '').slice(0, 120)}</div>
-            <div class="small-actions">
-              <button class="play-btn" type="button">Play</button>
-              <button class="delete-btn" type="button">Delete</button>
+            <div class='muted'>${item.timestamp || ''} · ${item.mode || 'auto'}</div>
+            <div class='muted'>${(item.text || '').slice(0, 120)}</div>
+            <div class='small-actions'>
+              <button class='play-btn' type='button'>Play</button>
+              <button class='delete-btn' type='button'>Delete</button>
             </div>
           `;
           row.querySelector('.play-btn').addEventListener('click', () => {
@@ -287,11 +371,15 @@
       }
     }
 
+    updateAuthState();
     updateModeVisibility();
-    refreshHistory();
-    refreshJobs();
-    loadOverview();
     modeEl.addEventListener('change', updateModeVisibility);
+    if (getToken()) {
+      refreshHistory();
+      refreshJobs();
+      refreshProjects();
+      loadOverview();
+    }
   </script>
 </body>
 </html>
