@@ -1,70 +1,46 @@
-"""Project and sample management for internal voice creation work."""
+"""Application settings and writable per-user data directories."""
 
 from __future__ import annotations
 
-import json
+from dataclasses import dataclass
+import os
 from pathlib import Path
-from typing import Any
-from uuid import uuid4
 
 
-class ProjectManager:
-    def __init__(self, db_path: Path):
-        self.db_path = Path(db_path)
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self.db_path.touch(exist_ok=True)
+@dataclass(frozen=True)
+class AppConfig:
+    app_name: str = "Voice Studio"
+    model_repo: str = "k2-fsa/OmniVoice"
+    output_dir_name: str = "generated"
+    cache_dir_name: str = "cache"
+    uploads_dir_name: str = "uploads"
+    history_file_name: str = "history.json"
+    auth_file_name: str = "auth.json"
+    projects_file_name: str = "projects.json"
 
-    def _load(self) -> list[dict[str, Any]]:
-        try:
-            value = json.loads(self.db_path.read_text(encoding="utf-8"))
-        except (FileNotFoundError, json.JSONDecodeError):
-            return []
-        if not isinstance(value, list):
-            return []
-        return [item for item in value if isinstance(item, dict)]
 
-    def _save(self, entries: list[dict[str, Any]]) -> None:
-        self.db_path.write_text(json.dumps(entries, indent=2, ensure_ascii=False), encoding="utf-8")
+CONFIG = AppConfig()
 
-    def create_project(self, username: str, name: str, description: str | None = None) -> dict[str, Any]:
-        name = name.strip()
-        if not name:
-            raise ValueError("Project name is required.")
-        project = {
-            "id": str(uuid4()),
-            "name": name,
-            "description": description or "",
-            "owner": username,
-            "samples": [],
-        }
-        entries = self._load()
-        entries.insert(0, project)
-        self._save(entries)
-        return project
 
-    def list_projects(self, username: str, role: str) -> list[dict[str, Any]]:
-        entries = self._load()
-        if role == "admin":
-            return entries
-        return [item for item in entries if item.get("owner") == username]
+def _user_data_dir() -> Path:
+    if os.name == "nt":
+        base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+        return base / "VoiceStudio"
+    if os.name == "darwin":
+        return Path.home() / "Library" / "Application Support" / "VoiceStudio"
+    base = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
+    return base / "voice-studio"
 
-    def add_sample(self, project_id: str, filename: str, sample_kind: str, metadata: dict[str, Any] | None = None) -> dict[str, Any]:
-        entries = self._load()
-        for project in entries:
-            if project.get("id") == project_id:
-                sample = {
-                    "id": str(uuid4()),
-                    "filename": filename,
-                    "sample_kind": sample_kind,
-                    "metadata": metadata or {},
-                }
-                project.setdefault("samples", []).append(sample)
-                self._save(entries)
-                return sample
-        raise ValueError("Project not found.")
 
-    def get_project(self, project_id: str) -> dict[str, Any] | None:
-        for project in self._load():
-            if project.get("id") == project_id:
-                return project
-        return None
+DATA_DIR = _user_data_dir()
+OUTPUT_DIR = DATA_DIR / CONFIG.output_dir_name
+CACHE_DIR = DATA_DIR / CONFIG.cache_dir_name
+UPLOADS_DIR = DATA_DIR / CONFIG.uploads_dir_name
+HISTORY_FILE = DATA_DIR / CONFIG.history_file_name
+AUTH_FILE = DATA_DIR / CONFIG.auth_file_name
+PROJECTS_FILE = DATA_DIR / CONFIG.projects_file_name
+
+for folder in (OUTPUT_DIR, CACHE_DIR, UPLOADS_DIR):
+    folder.mkdir(parents=True, exist_ok=True)
+for file in (HISTORY_FILE, AUTH_FILE, PROJECTS_FILE):
+    file.touch(exist_ok=True)
