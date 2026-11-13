@@ -1,69 +1,52 @@
-"""Small OmniVoice-style wrapper for speech generation."""
+"""JSON-backed recent generation history."""
 
 from __future__ import annotations
 
+from datetime import datetime
+import json
 from pathlib import Path
 from typing import Any
-
-import numpy as np
-import soundfile as sf
-import torch
-
-from app.core.device_manager import resolve_device
+from uuid import uuid4
 
 
-class VoiceEngine:
-    def __init__(self, model_repo: str, device: str = "auto", *, load_asr: bool = False):
+class HistoryManager:
+    def __init__(self, history_path: Path, max_items: int = 12):
+        self.history_path = Path(history_path)
+        self.max_items = max_items
+        self.history_path.parent.mkdir(parents=True, exist_ok=True)
+        self.history_path.touch(exist_ok=True)
+
+    def _load(self) -> list[dict[str, Any]]:
+        if self.history_path.stat().st_size == 0:
+            return []
         try:
-            from omnivoice import OmniVoice
-        except ImportError as exc:  # pragma: no cover - environment dependent
-            raise RuntimeError(
-                "OmniVoice is not installed. Install the project dependencies and then run "
-                "pip install git+https://github.com/k2-fsa/OmniVoice.git"
-            ) from exc
+            value = json.loads(self.history_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return []
+        return [item for item in value if isinstance(item, dict)] if isinstance(value, list) else []
 
-        self.device = resolve_device(device)
-        self.model_repo = model_repo
-        dtype = torch.float16 if self.device == "cuda" else torch.float32
-        self.model = OmniVoice.from_pretrained(
-            model_repo,
-            device_map=self.device,
-            dtype=dtype,
-            load_asr=load_asr,
-        )
-        self.sampling_rate = int(self.model.sampling_rate)
+    def _save(self, entries: list[dict[str, Any]]) -> None:
+        self.history_path.write_text(json.dumps(entries, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    def generate(
-        self,
-        text: str,
-        *,
-        ref_audio: str | None = None,
-        ref_text: str | None = None,
-        instruct: str | None = None,
-        language: str | None = None,
-        speed: float = 1.0,
-        num_step: int = 32,
-    ) -> np.ndarray:
-        if not text.strip():
-            raise ValueError("Please enter the text to synthesize.")
+    def list_recent(self) -> list[dict[str, Any]]:
+        entries = [item for item in self._load() if isinstance(item.get("output_path"), str) and Path(item["output_path"]).is_file()]
+        entries = entries[: self.max_items]
+        self._save(entries)
+        return entries
 
-        kwargs: dict[str, Any] = {"text": text.strip(), "num_step": int(num_step), "speed": float(speed)}
-        if ref_audio:
-            kwargs["ref_audio"] = ref_audio
-            if ref_text:
-                kwargs["ref_text"] = ref_text
-        if instruct:
-            kwargs["instruct"] = instruct.strip()
-        if language:
-            kwargs["language"] = language.strip()
+    def record_generation(self, output_path: Path, *, mode: str, text: str, ref_audio: str | None = None, instruct: str | None = None, language: str | None = None) -> dict[str, Any]:
+        entry = {
+            "id": str(uuid4()),
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "output_path": str(output_path),
+            "mode": mode,
+            "text": text[:200],
+            "ref_audio": ref_audio,
+            "instruct": instruct,
+            "language": language,
+        }
+        self._save([entry, *self._load()][: self.max_items])
+        return entry
 
-        result = self.model.generate(**kwargs)
-        if not result:
-            raise RuntimeError("The model returned no audio.")
-        return np.asarray(result[0], dtype=np.float32).squeeze()
-
-    def save_audio(self, audio: np.ndarray, path: str | Path) -> Path:
-        target = Path(path)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        sf.write(str(target), audio, self.sampling_rate, subtype="PCM_16")
-        return target
+    def delete_entry(self, entry_id: str) -> None:
+        self._save([item for item in self._load() if item.get("id") != entry_id])
